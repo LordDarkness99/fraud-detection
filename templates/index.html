@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistem Deteksi Penipuan Transaksi</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="background-animation">
+        <div class="blob blob-1"></div>
+        <div class="blob blob-2"></div>
+    </div>
+    
+    <div class="container">
+        <header>
+            <h1>Fraud Guard AI</h1>
+            <p>Analisis transaksi instan menggunakan XGBoost</p>
+        </header>
+
+        <main>
+            <form id="fraud-form">
+                <!-- Progress Bar -->
+                <div class="progress-container">
+                    <div class="progress-bar" id="progress-bar"></div>
+                    <div class="step-indicator">
+                        <span class="step active">Akun</span>
+                        <span class="step">Transaksi</span>
+                        <span class="step">Perilaku</span>
+                        <span class="step">Validasi</span>
+                    </div>
+                </div>
+
+                <!-- Step 1: Account Info -->
+                <div class="form-step active" id="step-1">
+                    <h2>Data Akun & Saldo</h2>
+                    <div class="input-group">
+                        <label for="creditLimit">Batas Kredit (Credit Limit)</label>
+                        <input type="number" id="creditLimit" name="creditLimit" value="5000" required>
+                    </div>
+                    <div class="input-group">
+                        <label for="availableMoney">Uang Tersedia (Available Money)</label>
+                        <input type="number" step="0.01" id="availableMoney" name="availableMoney" value="5000.0" required>
+                    </div>
+                    <div class="input-group">
+                        <label for="currentBalance">Saldo Saat Ini (Current Balance)</label>
+                        <input type="number" step="0.01" id="currentBalance" name="currentBalance" value="0.0" required>
+                    </div>
+                    <div class="btn-group right">
+                        <button type="button" class="btn next-btn">Selanjutnya</button>
+                    </div>
+                </div>
+
+                <!-- Step 2: Transaction Info -->
+                <div class="form-step" id="step-2">
+                    <h2>Detail Transaksi</h2>
+                    <div class="input-group">
+                        <label for="transactionAmount">Nominal Transaksi</label>
+                        <input type="number" step="0.01" id="transactionAmount" name="transactionAmount" value="98.55" required>
+                    </div>
+                    <div class="input-group">
+                        <label for="merchantName">Nama Merchant</label>
+                        <input type="text" id="merchantName" name="merchantName" value="Uber" required>
+                    </div>
+                    <div class="input-group">
+                        <label for="transactionType">Tipe Transaksi</label>
+                        <select id="transactionType" name="transactionType">
+                            <option value="PURCHASE">PURCHASE</option>
+                            <option value="ADDRESS_VERIFICATION">ADDRESS_VERIFICATION</option>
+                            <option value="REVERSAL">REVERSAL</option>
+                            <option value="UNKNOWN">UNKNOWN</option>
+                        </select>
+                    </div>
+                    <div class="input-group">
+                        <label for="merchantCategoryCode">Kode Kategori Merchant</label>
+                        <input type="text" id="merchantCategoryCode" name="merchantCategoryCode" value="rideshare" required>
+                    </div>
+                    <div class="input-group">
+                        <label for="acqCountry">Negara Akuisisi</label>
+                        <input type="text" id="acqCountry" name="acqCountry" value="US" required>
+                    </div>
+                    <div class="input-group">
+                        <label for="merchantCountryCode">Kode Negara Merchant</label>
+                        <input type="text" id="merchantCountryCode" name="merchantCountryCode" value="US" required>
+                    </div>
+                    <div class="btn-group">
+                        <button type="button" class="btn btn-secondary prev-btn">Kembali</button>
+                        <button type="button" class="btn next-btn">Selanjutnya</button>
+                    </div>
+                </div>
+
+                <!-- Step 3: Behavior & History -->
+                <div class="form-step" id="step-3">
+                    <h2>Riwayat & Perilaku (Feature Engineering)</h2>
+                    <div class="input-group">
+                        <label for="trx_count_24h">Jumlah Transaksi (24 Jam)</label>
+                        <input type="number" id="trx_count_24h" name="trx_count_24h" value="1" required>
+                    </div>
+                    <div class="input-group">
+                        <label for="trx_sum_24h">Total Nominal Transaksi (24 Jam)</label>
+                        <input type="number" step="0.01" id="trx_sum_24h" name="trx_sum_24h" value="98.55" required>
+                    </div>
+                    <div class="input-group">
+                        <label for="trx_sum_7d">Total Nominal Transaksi (7 Hari)</label>
+                        <input type="number" step="0.01" id="trx_sum_7d" name="trx_sum_7d" value="250.00" required>
+                    </div>
+                    <div class="input-group">
+                        <label for="avg_daily_spend_7d">Rata-rata Pengeluaran Harian (7 Hari)</label>
+                        <input type="number" step="0.01" id="avg_daily_spend_7d" name="avg_daily_spend_7d" value="35.71" required>
+                    </div>
+                    <div class="input-group">
+                        <label for="amount_vs_7d_avg">Rasio Nominal Transaksi vs Rata-rata 7 Hari</label>
+                        <input type="number" step="0.01" id="amount_vs_7d_avg" name="amount_vs_7d_avg" value="2.76" required>
+                    </div>
+                    <div class="input-group">
+                        <label for="transactionHour">Jam Transaksi (0-23)</label>
+                        <input type="number" id="transactionHour" name="transactionHour" value="14" min="0" max="23" required>
+                    </div>
+                    <div class="input-group">
+                        <label for="transactionDayOfWeek">Hari Transaksi (0-6)</label>
+                        <input type="number" id="transactionDayOfWeek" name="transactionDayOfWeek" value="5" min="0" max="6" required>
+                    </div>
+                    <div class="btn-group">
+                        <button type="button" class="btn btn-secondary prev-btn">Kembali</button>
+                        <button type="button" class="btn next-btn">Selanjutnya</button>
+                    </div>
+                </div>
+
+                <!-- Step 4: POS & Card Validation -->
+                <div class="form-step" id="step-4">
+                    <h2>Validasi POS & Kartu</h2>
+                    <div class="input-group">
+                        <label for="posEntryMode">Mode Entri POS</label>
+                        <input type="text" id="posEntryMode" name="posEntryMode" value="02" required>
+                    </div>
+                    <div class="input-group">
+                        <label for="posConditionCode">Kode Kondisi POS</label>
+                        <input type="text" id="posConditionCode" name="posConditionCode" value="01" required>
+                    </div>
+                    
+                    <div class="checkbox-group">
+                        <label class="checkbox-container">
+                            <input type="checkbox" id="cardPresent" name="cardPresent">
+                            <span class="checkmark"></span>
+                            Kartu Hadir Saat Transaksi (Card Present)
+                        </label>
+                        <label class="checkbox-container">
+                            <input type="checkbox" id="cvvMatch" name="cvvMatch" checked>
+                            <span class="checkmark"></span>
+                            CVV Cocok (CVV Match)
+                        </label>
+                        <label class="checkbox-container">
+                            <input type="checkbox" id="expirationDateKeyInMatch" name="expirationDateKeyInMatch">
+                            <span class="checkmark"></span>
+                            Exp. Date Match
+                        </label>
+                    </div>
+                    
+                    <div class="btn-group">
+                        <button type="button" class="btn btn-secondary prev-btn">Kembali</button>
+                        <button type="submit" class="btn btn-primary" id="submit-btn">Analisis Transaksi</button>
+                    </div>
+                </div>
+            </form>
+
+            <!-- Result Overlay -->
+            <div id="result-overlay" class="hidden">
+                <div class="result-card">
+                    <button class="close-btn" id="close-result">&times;</button>
+                    <div id="loading" class="hidden">
+                        <div class="spinner"></div>
+                        <p>Menganalisis pola transaksi...</p>
+                    </div>
+                    <div id="prediction-result" class="hidden">
+                        <div class="icon-container" id="result-icon">
+                            <!-- Injected by JS -->
+                        </div>
+                        <h2 id="result-title"></h2>
+                        <div class="probability-meter">
+                            <div class="meter-bar" id="meter-bar"></div>
+                        </div>
+                        <p id="result-prob"></p>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+</body>
+</html>
