@@ -12,6 +12,23 @@ Aplikasi web multi-step yang memungkinkan pengguna memasukkan 21 fitur transaksi
 
 ---
 
+## 📦 Dataset
+
+Dataset yang digunakan berasal dari Kaggle:
+
+> 🔗 **[Fraud Detection Dataset — Kaggle](https://www.kaggle.com/datasets/iabhishekbhardwaj/fraud-detection)**
+
+| Atribut | Detail |
+|---|---|
+| **Sumber** | Kaggle — iabhishekbhardwaj |
+| **Jumlah Baris** | 786.363 transaksi |
+| **Jumlah Kolom** | 29 fitur |
+| **Tipe Data** | Campuran (numerik, teks, boolean) |
+| **Label Target** | `isFraud` (True/False) |
+| **Distribusi Label** | ~98.42% Normal, ~1.58% Fraud (sangat imbalanced) |
+
+---
+
 ## 📊 Performa Model
 
 Model XGBoost dilatih menggunakan dataset transaksi kartu kredit dengan **786.363 baris data** dan tingkat penipuan sebesar ~1.58% (imbalanced class).
